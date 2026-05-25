@@ -1,11 +1,451 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Assistant de Conduite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&family=Google+Sans+Display:wght@400&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --blue: #1a73e8;
+            --blue-light: #e8f0fe;
+            --blue-dark: #1557b0;
+            --surface: #fff;
+            --bg: #f8f9fa;
+            --on-surface: #202124;
+            --secondary: #5f6368;
+            --border: #dadce0;
+            --error: #d93025;
+            --radius: 8px;
+            --radius-lg: 12px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --surface: #2d2e30;
+                --bg: #202124;
+                --on-surface: #e8eaed;
+                --secondary: #9aa0a6;
+                --border: #5f6368;
+                --blue-light: #1c3a6b;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .row { grid-template-columns: 1fr; }
+            }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg);
+            color: var(--on-surface);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 0 24px;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .topbar-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--blue-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .topbar-icon .material-icons-round {
+            color: var(--blue);
+            font-size: 20px;
+        }
+
+        .topbar-title {
+            font-family: 'Google Sans', sans-serif;
+            font-size: 18px;
+            font-weight: 400;
+            color: var(--on-surface);
+            flex: 1;
+        }
+
+        .topbar-total {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--blue-light);
+            border-radius: 100px;
+            padding: 6px 16px;
+        }
+
+        .topbar-total .material-icons-round {
+            font-size: 16px;
+            color: var(--blue);
+        }
+
+        .topbar-total-text {
+            font-family: 'Google Sans', sans-serif;
+            font-size: 13px;
+            color: var(--blue);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 32px 16px 48px;
+        }
+
+        form {
+            width: 100%;
+            max-width: 560px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-header .material-icons-round {
+            font-size: 20px;
+            color: var(--blue);
+        }
+
+        .card-header-title {
+            font-family: 'Google Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--secondary);
+            letter-spacing: 0.01em;
+        }
+
+        .card-body {
+            padding: 20px 24px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .field label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--secondary);
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .field input,
+        .field select {
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            color: var(--on-surface);
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 14px;
+            outline: none;
+            transition: border-color 0.15s, background 0.15s;
+            width: 100%;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .field select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235f6368' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-color: var(--bg);
+            padding-right: 32px;
+            cursor: pointer;
+        }
+
+        .field input:focus,
+        .field select:focus {
+            border-color: var(--blue);
+            background: var(--surface);
+            outline: none;
+        }
+
+        .field input[type="date"]::-webkit-calendar-picker-indicator,
+        .field input[type="time"]::-webkit-calendar-picker-indicator {
+            opacity: 0.5;
+            cursor: pointer;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .btn-save {
+            font-family: 'Google Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: #fff;
+            background: var(--blue);
+            border: none;
+            border-radius: 100px;
+            padding: 12px 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.15s, box-shadow 0.15s;
+            letter-spacing: 0.01em;
+            align-self: flex-end;
+        }
+
+        .btn-save .material-icons-round {
+            font-size: 18px;
+        }
+
+        .btn-save:hover {
+            background: var(--blue-dark);
+            box-shadow: 0 2px 8px rgba(26,115,232,0.35);
+        }
+
+        .btn-save:active {
+            background: var(--blue-dark);
+            box-shadow: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 16px 24px 24px;
+        }
+
+        footer p {
+            font-size: 12px;
+            color: var(--secondary);
+            text-align: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .topbar { animation: fadeIn 0.3s ease both; }
+        .card:nth-child(1) { animation: fadeIn 0.35s 0.05s ease both; }
+        .card:nth-child(2) { animation: fadeIn 0.35s 0.08s ease both; }
+        .card:nth-child(3) { animation: fadeIn 0.35s 0.11s ease both; }
+        .btn-save { animation: fadeIn 0.35s 0.14s ease both; }
+    </style>
+    <script>
+        let conditionsMeteo = [{"idm":"1","meteo":"Ensoleillé"},{"idm":"2","meteo":"Partiellement nuageux"},{"idm":"3","meteo":"Nuageux"},{"idm":"4","meteo":"Couvert"},{"idm":"5","meteo":"Pluvieux"},{"idm":"6","meteo":"Neigeux"},{"idm":"7","meteo":"Brumeux"}];
+        let conditionsPassagers = [{"idp":"1","relation":"pere"},{"idp":"2","relation":"maman"},{"idp":"3","relation":"frere"}];
+        let conditionsRoute = [{"idr":"1","nom":"Autoroute"},{"idr":"2","nom":"Nationale"},{"idr":"3","nom":"Ville"}];
+        let conditionsMoment = [{"idn":"1","moment":"Jour"},{"idn":"2","moment":"Nuit"}];
+
+        window.onload = function() {
+            let selectMeteo = document.getElementById('meteo');
+            conditionsMeteo.forEach(item => {
+                selectMeteo.insertAdjacentHTML('beforeend', `<option value="${item.idm}">${item.meteo}</option>`);
+            });
+
+            let selectRoute = document.getElementById('route');
+            conditionsRoute.forEach(item => {
+                selectRoute.insertAdjacentHTML('beforeend', `<option value="${item.idr}">${item.nom}</option>`);
+            });
+
+            let selectDN = document.getElementById('dn');
+            conditionsMoment.forEach(item => {
+                selectDN.insertAdjacentHTML('beforeend', `<option value="${item.idn}">${item.moment}</option>`);
+            });
+
+            let selectPSG = document.getElementById('psg');
+            conditionsPassagers.forEach(item => {
+                selectPSG.insertAdjacentHTML('beforeend',`<option value ="${item.idp}">${item.relation}</option>`);
+            });
+
+            calculateTotale();
+        };
+
+        function calculateTotale(){
+            let savedDrives = JSON.parse(localStorage.getItem('mes_conduites')) || [];
+            let distTotale = 0;
+            savedDrives.forEach(drive => {
+                distTotale += Number(drive.km);
+            });
+            document.getElementById('total_dist').innerText = distTotale;
+        }
+
+        function save(){
+            if (!document.querySelector('form').checkValidity()) {
+                alert("Veuillez remplir tous les champs obligatoires avant d'enregistrer.");
+                return;
+            }
+
+            let savedDrives = JSON.parse(localStorage.getItem('mes_conduites')) || [];
+            let newId = savedDrives.length + 1;
+            let newDrive = {
+                 id: newId,
+                 date: document.getElementById('date').value,
+                 h_dep: document.getElementById('ddep').value,
+                 h_arr: document.getElementById('darr').value,
+                 km: document.getElementById('dist').value,
+                 meteo: document.getElementById('meteo').value,
+                 route: document.getElementById('route').value,
+                 moment: document.getElementById('dn').value,
+                 v_dep: document.getElementById('vdep').value,
+                 v_arr: document.getElementById('varr').value,
+                 psg: document.getElementById('psg').value
+            };
+
+            savedDrives.push(newDrive);
+            localStorage.setItem('mes_conduites', JSON.stringify(savedDrives));
+            alert("SAVED!");
+            calculateTotale();
+            document.querySelector('form').reset();
+        }
+    </script>
 </head>
 <body>
-    
+
+    <header class="topbar">
+        <div class="topbar-icon">
+            <span class="material-icons-round">directions_car</span>
+        </div>
+        <span class="topbar-title">Assistant de Conduite</span>
+        <div class="topbar-total">
+            <span class="material-icons-round">route</span>
+            <span class="topbar-total-text"><span id="total_dist">0</span> km au total</span>
+        </div>
+    </header>
+
+    <main>
+        <form class="labels">
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="material-icons-round">event</span>
+                    <span class="card-header-title">Date & horaires</span>
+                </div>
+                <div class="card-body">
+                    <div class="field">
+                        <label>Date</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="row">
+                        <div class="field">
+                            <label>Heure de départ</label>
+                            <input type="time" id="ddep" required>
+                        </div>
+                        <div class="field">
+                            <label>Heure d'arrivée</label>
+                            <input type="time" id="darr" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="material-icons-round">map</span>
+                    <span class="card-header-title">Trajet</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="field">
+                            <label>Ville de départ</label>
+                            <input id="vdep" required>
+                        </div>
+                        <div class="field">
+                            <label>Ville d'arrivée</label>
+                            <input id="varr" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Distance (km)</label>
+                        <input type="number" id="dist" min="0" required>
+                    </div>
+                    <div class="field">
+                        <label>Type de route</label>
+                        <select id="route" required>
+                            <option value="">Choisir...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="material-icons-round">wb_sunny</span>
+                    <span class="card-header-title">Conditions</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="field">
+                            <label>Météo</label>
+                            <select id="meteo" required>
+                                <option value="">Choisir...</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Jour / Nuit</label>
+                            <select id="dn" required>
+                                <option value="">Choisir...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Passager</label>
+                        <select id="psg" required>
+                            <option value="">Choisir...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-save" type="button" onclick="save()">
+                <span class="material-icons-round">save</span>
+                Enregistrer
+            </button>
+
+        </form>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 A.J — Tous droits réservés</p>
+    </footer>
+
 </body>
 </html>
