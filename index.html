@@ -1,451 +1,714 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assistant de Conduite</title>
-    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&family=Google+Sans+Display:wght@400&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <title>Anas Jayed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #f0ede6;
+            --muted: #555;
+            --accent: #c8ff00;
+            --accent2: #ff6b35;
+            --border: rgba(240,237,230,0.08);
+        }
+
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        :root {
-            --blue: #1a73e8;
-            --blue-light: #e8f0fe;
-            --blue-dark: #1557b0;
-            --surface: #fff;
-            --bg: #f8f9fa;
-            --on-surface: #202124;
-            --secondary: #5f6368;
-            --border: #dadce0;
-            --error: #d93025;
-            --radius: 8px;
-            --radius-lg: 12px;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --surface: #2d2e30;
-                --bg: #202124;
-                --on-surface: #e8eaed;
-                --secondary: #9aa0a6;
-                --border: #5f6368;
-                --blue-light: #1c3a6b;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .row { grid-template-columns: 1fr; }
-            }
+        html { scroll-behavior: smooth; }
 
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Syne', sans-serif;
             background: var(--bg);
-            color: var(--on-surface);
+            color: var(--fg);
+            min-height: 100vh;
+            overflow-x: hidden;
+            cursor: none;
+        }
+
+        /* CUSTOM CURSOR */
+        .cursor {
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s, width 0.2s, height 0.2s;
+            mix-blend-mode: difference;
+        }
+
+        .cursor-ring {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--accent);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+            transition: all 0.15s ease;
+            mix-blend-mode: difference;
+        }
+
+        /* NOISE OVERLAY */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0.4;
+        }
+
+        /* NAV */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            padding: 24px 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        nav.scrolled {
+            border-color: var(--border);
+            background: rgba(10,10,10,0.9);
+            backdrop-filter: blur(12px);
+        }
+
+        .nav-logo {
+            font-family: 'Syne Mono', monospace;
+            font-size: 14px;
+            color: var(--accent);
+            letter-spacing: 0.1em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--fg); }
+
+        /* HERO */
+        .hero {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-        }
-
-        .topbar {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 0 24px;
-            height: 64px;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .topbar-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--blue-light);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .topbar-icon .material-icons-round {
-            color: var(--blue);
-            font-size: 20px;
-        }
-
-        .topbar-title {
-            font-family: 'Google Sans', sans-serif;
-            font-size: 18px;
-            font-weight: 400;
-            color: var(--on-surface);
-            flex: 1;
-        }
-
-        .topbar-total {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--blue-light);
-            border-radius: 100px;
-            padding: 6px 16px;
-        }
-
-        .topbar-total .material-icons-round {
-            font-size: 16px;
-            color: var(--blue);
-        }
-
-        .topbar-total-text {
-            font-family: 'Google Sans', sans-serif;
-            font-size: 13px;
-            color: var(--blue);
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
-        main {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            padding: 32px 16px 48px;
-        }
-
-        form {
-            width: 100%;
-            max-width: 560px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .card {
-            background: var(--surface);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
+            justify-content: flex-end;
+            padding: 0 48px 80px;
+            position: relative;
             overflow: hidden;
         }
 
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 20px 24px 16px;
-            border-bottom: 1px solid var(--border);
+        .hero-bg-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(120px, 18vw, 260px);
+            font-weight: 800;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(240,237,230,0.04);
+            white-space: nowrap;
+            pointer-events: none;
+            user-select: none;
+            letter-spacing: -0.05em;
         }
 
-        .card-header .material-icons-round {
-            font-size: 20px;
-            color: var(--blue);
-        }
-
-        .card-header-title {
-            font-family: 'Google Sans', sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--secondary);
-            letter-spacing: 0.01em;
-        }
-
-        .card-body {
-            padding: 20px 24px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .field {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .field label {
+        .hero-tag {
+            font-family: 'Syne Mono', monospace;
             font-size: 12px;
-            font-weight: 500;
-            color: var(--secondary);
-            letter-spacing: 0.03em;
+            color: var(--accent);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            opacity: 0;
+            animation: fadeUp 0.8s 0.2s ease forwards;
+        }
+
+        .hero-name {
+            font-size: clamp(56px, 9vw, 130px);
+            font-weight: 800;
+            line-height: 0.9;
+            letter-spacing: -0.03em;
+            margin-bottom: 32px;
+            opacity: 0;
+            animation: fadeUp 0.8s 0.35s ease forwards;
+        }
+
+        .hero-name span {
+            color: var(--accent);
+            display: block;
+        }
+
+        .hero-bottom {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            opacity: 0;
+            animation: fadeUp 0.8s 0.5s ease forwards;
+        }
+
+        .hero-desc {
+            max-width: 360px;
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--muted);
+            font-weight: 400;
+        }
+
+        .hero-desc strong {
+            color: var(--fg);
+            font-weight: 600;
+        }
+
+        .hero-scroll {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 10px;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
         }
 
-        .field input,
-        .field select {
-            font-family: 'Roboto', sans-serif;
-            font-size: 14px;
-            color: var(--on-surface);
-            background: var(--bg);
-            border: 1.5px solid var(--border);
-            border-radius: var(--radius);
-            padding: 10px 14px;
-            outline: none;
-            transition: border-color 0.15s, background 0.15s;
-            width: 100%;
-            appearance: none;
-            -webkit-appearance: none;
+        .scroll-line {
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, var(--accent), transparent);
+            animation: scrollPulse 2s ease infinite;
         }
 
-        .field select {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235f6368' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-color: var(--bg);
-            padding-right: 32px;
-            cursor: pointer;
+        @keyframes scrollPulse {
+            0%, 100% { opacity: 1; transform: scaleY(1); }
+            50% { opacity: 0.4; transform: scaleY(0.6); }
         }
 
-        .field input:focus,
-        .field select:focus {
-            border-color: var(--blue);
-            background: var(--surface);
-            outline: none;
+        /* DIVIDER */
+        .divider {
+            padding: 0 48px;
+            margin: 0;
         }
 
-        .field input[type="date"]::-webkit-calendar-picker-indicator,
-        .field input[type="time"]::-webkit-calendar-picker-indicator {
-            opacity: 0.5;
-            cursor: pointer;
+        .divider-line {
+            height: 1px;
+            background: var(--border);
         }
 
-        .row {
+        /* ABOUT */
+        .about {
+            padding: 120px 48px;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            gap: 80px;
+            align-items: center;
         }
 
-        .btn-save {
-            font-family: 'Google Sans', sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            color: #fff;
-            background: var(--blue);
-            border: none;
-            border-radius: 100px;
-            padding: 12px 32px;
-            cursor: pointer;
+        .section-label {
+            font-family: 'Syne Mono', monospace;
+            font-size: 11px;
+            color: var(--accent);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 24px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: background 0.15s, box-shadow 0.15s;
-            letter-spacing: 0.01em;
-            align-self: flex-end;
+            gap: 12px;
         }
 
-        .btn-save .material-icons-round {
-            font-size: 18px;
+        .section-label::after {
+            content: '';
+            height: 1px;
+            width: 40px;
+            background: var(--accent);
         }
 
-        .btn-save:hover {
-            background: var(--blue-dark);
-            box-shadow: 0 2px 8px rgba(26,115,232,0.35);
+        .about-title {
+            font-size: clamp(36px, 4vw, 56px);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin-bottom: 24px;
         }
 
-        .btn-save:active {
-            background: var(--blue-dark);
-            box-shadow: none;
+        .about-text {
+            font-size: 15px;
+            line-height: 1.8;
+            color: var(--muted);
         }
 
-        footer {
-            text-align: center;
-            padding: 16px 24px 24px;
+        .about-text + .about-text { margin-top: 16px; }
+
+        .about-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
         }
 
-        footer p {
+        .stat {
+            background: rgba(240,237,230,0.03);
+            border: 1px solid var(--border);
+            padding: 32px 28px;
+            transition: background 0.2s;
+        }
+
+        .stat:hover { background: rgba(240,237,230,0.06); }
+
+        .stat-num {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            color: var(--accent);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
             font-size: 12px;
-            color: var(--secondary);
-            text-align: center;
+            color: var(--muted);
+            letter-spacing: 0.05em;
+            font-weight: 500;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
+        /* PROJECTS */
+        .projects {
+            padding: 80px 48px 120px;
+        }
+
+        .projects-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 64px;
+        }
+
+        .projects-title {
+            font-size: clamp(36px, 4vw, 56px);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+        }
+
+        .project-card {
+            background: rgba(240,237,230,0.02);
+            border: 1px solid var(--border);
+            padding: 48px 40px;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            transition: background 0.3s;
+            group: true;
+        }
+
+        .project-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(200,255,0,0.04), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .project-card:hover::before { opacity: 1; }
+        .project-card:hover { background: rgba(240,237,230,0.04); }
+
+        .project-card.featured {
+            grid-column: span 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: center;
+        }
+
+        .project-num {
+            font-family: 'Syne Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: 0.15em;
+            margin-bottom: 20px;
+        }
+
+        .project-name {
+            font-size: clamp(22px, 2.5vw, 32px);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .project-desc {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--muted);
+            margin-bottom: 28px;
+        }
+
+        .project-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            font-family: 'Syne Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            padding: 5px 12px;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .tag.accent {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .project-arrow {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            font-size: 20px;
+            color: var(--muted);
+            transition: transform 0.3s, color 0.3s;
+        }
+
+        .project-card:hover .project-arrow {
+            transform: translate(4px, -4px);
+            color: var(--accent);
+        }
+
+        .project-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 16px;
+            font-family: 'Syne Mono', monospace;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--muted);
+        }
+
+        .status-dot.live {
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
+            animation: pulse 2s ease infinite;
+        }
+
+        .status-dot.wip {
+            background: var(--accent2);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* FOOTER */
+        footer {
+            padding: 60px 48px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .footer-left {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .footer-left strong {
+            color: var(--fg);
+            font-weight: 600;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links a {
+            font-family: 'Syne Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: var(--accent); }
+
+        /* ANIMATIONS */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .topbar { animation: fadeIn 0.3s ease both; }
-        .card:nth-child(1) { animation: fadeIn 0.35s 0.05s ease both; }
-        .card:nth-child(2) { animation: fadeIn 0.35s 0.08s ease both; }
-        .card:nth-child(3) { animation: fadeIn 0.35s 0.11s ease both; }
-        .btn-save { animation: fadeIn 0.35s 0.14s ease both; }
+        .reveal {
+            opacity: 0;
+            transform: translateY(32px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* MOBILE */
+        @media (max-width: 768px) {
+            nav { padding: 20px 24px; }
+            .nav-links { display: none; }
+            .hero { padding: 0 24px 60px; }
+            .hero-bg-text { display: none; }
+            .divider { padding: 0 24px; }
+            .about { grid-template-columns: 1fr; padding: 80px 24px; gap: 48px; }
+            .projects { padding: 60px 24px 80px; }
+            .projects-grid { grid-template-columns: 1fr; }
+            .project-card.featured { grid-column: span 1; grid-template-columns: 1fr; }
+            .projects-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            footer { flex-direction: column; gap: 24px; align-items: flex-start; padding: 40px 24px; }
+        }
     </style>
-    <script>
-        let conditionsMeteo = [{"idm":"1","meteo":"Ensoleillé"},{"idm":"2","meteo":"Partiellement nuageux"},{"idm":"3","meteo":"Nuageux"},{"idm":"4","meteo":"Couvert"},{"idm":"5","meteo":"Pluvieux"},{"idm":"6","meteo":"Neigeux"},{"idm":"7","meteo":"Brumeux"}];
-        let conditionsPassagers = [{"idp":"1","relation":"pere"},{"idp":"2","relation":"maman"},{"idp":"3","relation":"frere"}];
-        let conditionsRoute = [{"idr":"1","nom":"Autoroute"},{"idr":"2","nom":"Nationale"},{"idr":"3","nom":"Ville"}];
-        let conditionsMoment = [{"idn":"1","moment":"Jour"},{"idn":"2","moment":"Nuit"}];
-
-        window.onload = function() {
-            let selectMeteo = document.getElementById('meteo');
-            conditionsMeteo.forEach(item => {
-                selectMeteo.insertAdjacentHTML('beforeend', `<option value="${item.idm}">${item.meteo}</option>`);
-            });
-
-            let selectRoute = document.getElementById('route');
-            conditionsRoute.forEach(item => {
-                selectRoute.insertAdjacentHTML('beforeend', `<option value="${item.idr}">${item.nom}</option>`);
-            });
-
-            let selectDN = document.getElementById('dn');
-            conditionsMoment.forEach(item => {
-                selectDN.insertAdjacentHTML('beforeend', `<option value="${item.idn}">${item.moment}</option>`);
-            });
-
-            let selectPSG = document.getElementById('psg');
-            conditionsPassagers.forEach(item => {
-                selectPSG.insertAdjacentHTML('beforeend',`<option value ="${item.idp}">${item.relation}</option>`);
-            });
-
-            calculateTotale();
-        };
-
-        function calculateTotale(){
-            let savedDrives = JSON.parse(localStorage.getItem('mes_conduites')) || [];
-            let distTotale = 0;
-            savedDrives.forEach(drive => {
-                distTotale += Number(drive.km);
-            });
-            document.getElementById('total_dist').innerText = distTotale;
-        }
-
-        function save(){
-            if (!document.querySelector('form').checkValidity()) {
-                alert("Veuillez remplir tous les champs obligatoires avant d'enregistrer.");
-                return;
-            }
-
-            let savedDrives = JSON.parse(localStorage.getItem('mes_conduites')) || [];
-            let newId = savedDrives.length + 1;
-            let newDrive = {
-                 id: newId,
-                 date: document.getElementById('date').value,
-                 h_dep: document.getElementById('ddep').value,
-                 h_arr: document.getElementById('darr').value,
-                 km: document.getElementById('dist').value,
-                 meteo: document.getElementById('meteo').value,
-                 route: document.getElementById('route').value,
-                 moment: document.getElementById('dn').value,
-                 v_dep: document.getElementById('vdep').value,
-                 v_arr: document.getElementById('varr').value,
-                 psg: document.getElementById('psg').value
-            };
-
-            savedDrives.push(newDrive);
-            localStorage.setItem('mes_conduites', JSON.stringify(savedDrives));
-            alert("SAVED!");
-            calculateTotale();
-            document.querySelector('form').reset();
-        }
-    </script>
 </head>
 <body>
 
-    <header class="topbar">
-        <div class="topbar-icon">
-            <span class="material-icons-round">directions_car</span>
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
+    <nav id="nav">
+        <span class="nav-logo">AJ.DEV</span>
+        <ul class="nav-links">
+            <li><a href="#about">About</a></li>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="https://github.com/Anas-Jayed" target="_blank">GitHub</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero" id="home">
+        <div class="hero-bg-text">JAYED</div>
+        <div class="hero-tag">CS Student · Université de Strasbourg</div>
+        <h1 class="hero-name">
+            Anas<span>Jayed.</span>
+        </h1>
+        <div class="hero-bottom">
+            <p class="hero-desc">
+                <strong>Developer & builder</strong> passionate about computers and robotics. 
+                Currently studying at Université de Strasbourg and shipping things that matter.
+            </p>
+            <div class="hero-scroll">
+                <div class="scroll-line"></div>
+                scroll
+            </div>
         </div>
-        <span class="topbar-title">Assistant de Conduite</span>
-        <div class="topbar-total">
-            <span class="material-icons-round">route</span>
-            <span class="topbar-total-text"><span id="total_dist">0</span> km au total</span>
+    </section>
+
+    <div class="divider"><div class="divider-line"></div></div>
+
+    <section class="about reveal" id="about">
+        <div class="about-left">
+            <div class="section-label">About</div>
+            <h2 class="about-title">Code, robots,<br>and curiosity.</h2>
+            <p class="about-text">
+                CS student at Université de Strasbourg with a deep interest in how things work at a low level — from operating systems to hardware. I build projects that solve real problems or just scratch a personal itch.
+            </p>
+            <p class="about-text" style="margin-top:16px;">
+                When I'm not studying, I'm working with friends on side projects that range from weather visualizations to writing an OS from scratch.
+            </p>
         </div>
-    </header>
+        <div class="about-stats">
+            <div class="stat">
+                <div class="stat-num">4+</div>
+                <div class="stat-label">Projects built</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">2</div>
+                <div class="stat-label">Collab projects</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">1</div>
+                <div class="stat-label">OS from scratch</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">∞</div>
+                <div class="stat-label">Curiosity</div>
+            </div>
+        </div>
+    </section>
 
-    <main>
-        <form class="labels">
+    <div class="divider"><div class="divider-line"></div></div>
 
-            <div class="card">
-                <div class="card-header">
-                    <span class="material-icons-round">event</span>
-                    <span class="card-header-title">Date & horaires</span>
+    <section class="projects reveal" id="projects">
+        <div class="projects-header">
+            <div>
+                <div class="section-label">Work</div>
+                <h2 class="projects-title">Selected<br>projects.</h2>
+            </div>
+        </div>
+        <div class="projects-grid">
+
+            <!-- SeaFile Grade Tracker - featured -->
+            <a class="project-card featured" href="https://github.com/Anas-Jayed/SeaFile-Grade-Tracker" target="_blank">
+                <div>
+                    <div class="project-num">01</div>
+                    <div class="project-status"><span class="status-dot live"></span> Live & Open Source</div>
+                    <h3 class="project-name">SeaFile Grade Tracker</h3>
+                    <p class="project-desc">
+                        A Python script that scans your Seafile results repository and instantly surfaces any newly uploaded grades. No more checking manually — just run it and know. Make sure you modify the config part before using it.
+                    </p>
+                    <div class="project-tags">
+                        <span class="tag accent">Python</span>
+                        <span class="tag">Seafile API</span>
+                        <span class="tag">Automation</span>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="field">
-                        <label>Date</label>
-                        <input type="date" id="date" required>
-                    </div>
-                    <div class="row">
-                        <div class="field">
-                            <label>Heure de départ</label>
-                            <input type="time" id="ddep" required>
-                        </div>
-                        <div class="field">
-                            <label>Heure d'arrivée</label>
-                            <input type="time" id="darr" required>
-                        </div>
-                    </div>
+                <div style="display:flex;align-items:center;justify-content:center;">
+                    <div style="font-family:'Syne Mono',monospace;font-size:clamp(48px,6vw,80px);color:var(--accent);opacity:0.15;font-weight:800;text-align:center;line-height:1;">GRADE<br>TRACK</div>
+                </div>
+                <span class="project-arrow">↗</span>
+            </a>
+
+            <!-- Driving App -->
+            <a class="project-card" href="/driving" style="text-decoration:none;">
+                <div class="project-num">02</div>
+                <div class="project-status"><span class="status-dot live"></span> Live</div>
+                <h3 class="project-name">Assistant de Conduite</h3>
+                <p class="project-desc">
+                    A driving experience logger built with vanilla JS. Tracks weather, route type, passengers, and distance using dynamic JSON data and localStorage.
+                </p>
+                <div class="project-tags">
+                    <span class="tag accent">JavaScript</span>
+                    <span class="tag">HTML/CSS</span>
+                    <span class="tag">localStorage</span>
+                </div>
+                <span class="project-arrow">↗</span>
+            </a>
+
+            <!-- Weatherscape -->
+            <div class="project-card" style="cursor:default;">
+                <div class="project-num">03</div>
+                <div class="project-status"><span class="status-dot wip"></span> In Progress</div>
+                <h3 class="project-name">Weatherscape</h3>
+                <p class="project-desc">
+                    Turns your local weather and terrain into an animated landscape — mountains where there are mountains, desert where it's dry, rain that actually falls. Built with friends.
+                </p>
+                <div class="project-tags">
+                    <span class="tag">Animation</span>
+                    <span class="tag">Weather API</span>
+                    <span class="tag">Private</span>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <span class="material-icons-round">map</span>
-                    <span class="card-header-title">Trajet</span>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="field">
-                            <label>Ville de départ</label>
-                            <input id="vdep" required>
-                        </div>
-                        <div class="field">
-                            <label>Ville d'arrivée</label>
-                            <input id="varr" required>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label>Distance (km)</label>
-                        <input type="number" id="dist" min="0" required>
-                    </div>
-                    <div class="field">
-                        <label>Type de route</label>
-                        <select id="route" required>
-                            <option value="">Choisir...</option>
-                        </select>
-                    </div>
+            <!-- OS from scratch -->
+            <div class="project-card" style="cursor:default;">
+                <div class="project-num">04</div>
+                <div class="project-status"><span class="status-dot wip"></span> In Progress</div>
+                <h3 class="project-name">OS from Scratch</h3>
+                <p class="project-desc">
+                    Building an operating system from the ground up with a group of friends. Bootloader, kernel, the whole thing. Private for now.
+                </p>
+                <div class="project-tags">
+                    <span class="tag">C</span>
+                    <span class="tag">Assembly</span>
+                    <span class="tag">Systems</span>
+                    <span class="tag">Private</span>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <span class="material-icons-round">wb_sunny</span>
-                    <span class="card-header-title">Conditions</span>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="field">
-                            <label>Météo</label>
-                            <select id="meteo" required>
-                                <option value="">Choisir...</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label>Jour / Nuit</label>
-                            <select id="dn" required>
-                                <option value="">Choisir...</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label>Passager</label>
-                        <select id="psg" required>
-                            <option value="">Choisir...</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <button class="btn-save" type="button" onclick="save()">
-                <span class="material-icons-round">save</span>
-                Enregistrer
-            </button>
-
-        </form>
-    </main>
+        </div>
+    </section>
 
     <footer>
-        <p>&copy; 2026 A.J — Tous droits réservés</p>
+        <div class="footer-left">
+            <strong>Anas Jayed</strong> · CS Student, Université de Strasbourg · 2026
+        </div>
+        <div class="footer-links">
+            <a href="https://github.com/Anas-Jayed" target="_blank">GitHub</a>
+            <a href="mailto:anasjayed@email.com">Email</a>
+        </div>
     </footer>
+
+    <script>
+        // Custom cursor
+        const cursor = document.getElementById('cursor');
+        const ring = document.getElementById('cursorRing');
+        let mx = 0, my = 0, rx = 0, ry = 0;
+
+        document.addEventListener('mousemove', e => {
+            mx = e.clientX; my = e.clientY;
+            cursor.style.left = mx + 'px';
+            cursor.style.top = my + 'px';
+        });
+
+        function animateRing() {
+            rx += (mx - rx) * 0.12;
+            ry += (my - ry) * 0.12;
+            ring.style.left = rx + 'px';
+            ring.style.top = ry + 'px';
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+
+        // Nav scroll
+        const nav = document.getElementById('nav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 40);
+        });
+
+        // Reveal on scroll
+        const reveals = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    observer.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        reveals.forEach(r => observer.observe(r));
+    </script>
 
 </body>
 </html>
